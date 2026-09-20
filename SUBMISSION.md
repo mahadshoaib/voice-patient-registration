@@ -1,0 +1,54 @@
+# Submission
+
+## 1. Repository URL
+
+https://github.com/mahadshoaib/voice-patient-registration
+
+Publication verification pending until the first push completes.
+
+## 2. Phone number to call
+
+**+1 (859) 689-8029** — provisioned, active and attached to the Vapi assistant.
+Please test from a supported U.S. calling route. Real telephone acceptance is pending.
+
+## 3. API base URL
+
+https://patient-api-production-2f36.up.railway.app
+
+- [Interactive API documentation](https://patient-api-production-2f36.up.railway.app/docs)
+- [Health check](https://patient-api-production-2f36.up.railway.app/health)
+
+## 4. Credentials and testing notes
+
+The **reviewer API key will be supplied privately**; recipient/channel confirmation
+is pending. In Swagger, select Authorize and
+enter the key; programmatic patient requests use the `X-API-Key` header.
+No login is needed to call the phone number. Browser testing of the hosted assistant
+requires authorized Vapi workspace access or an owner-led demonstration. Provider
+credentials are not included in the repository and are not needed for telephone/API review.
+
+**Testing disclosure:** We completed live browser voice calls through Vapi, including
+new registration and returning-patient updates, and verified the saved data through
+the deployed API. We did not complete a real telephone call because a supported
+international calling route was unavailable to the tester. Browser testing bypasses
+telephone routing; inbound telephone acceptance remains pending.
+
+**Other evidence:** 82 automated tests and lint passed. Remote CRUD, authenticated
+webhooks, database persistence across restart/redeploy, confirmation safeguards and
+retry recovery were verified. All demographic field-group updates and nullable-field
+removal are tested at the tool/API layer; this does not claim every field was tested
+through speech. The latest post-save completion guidance requires a fresh spoken check.
+
+Use fictional information only. Phone matching is not identity verification; the
+agent is English-only. Voice consent is interpreted by the model. This is a technical
+assessment, not a production healthcare system. No HIPAA compliance is claimed.
+
+Start with the [reviewer guide](REVIEWER_GUIDE.md) for phone/browser instructions,
+a fictional scenario and API verification. [Architecture](ARCHITECTURE.md) explains
+decisions and trade-offs; [testing](TESTING.md) distinguishes checked and pending cases.
+The [requirements mapping](REQUIREMENTS.md) covers all five functional requirements,
+non-functional expectations and the two completed bonuses: duplicate detection and tests.
+
+Before sending: publish the repository, privately provide the current API key,
+keep hosting/call credits available, and confirm the assessment deadline. This
+document is a prepared handoff, not evidence that a submission has been sent.

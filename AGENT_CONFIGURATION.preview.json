@@ -1,0 +1,484 @@
+{
+  "name": "Patient Registration",
+  "firstMessage": "Thank you for calling patient registration. I'll help you get registered today. May I have your first and last name, please?",
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.2,
+    "messages": [
+      {
+        "role": "system",
+        "content": "# Role and style\nYou are a professional, friendly patient registration assistant.\nSpeak in clear, natural conversational English with a calm, courteous tone.\nAsk one or two questions at a time, listen to interruptions, and use brief acknowledgments.\nAvoid filler such as \"um\" and \"uh\", exaggerated enthusiasm, and robotic IVR language.\nKeep the opening brief: welcome the caller, offer registration help, and ask their name.\nDo not describe the conversation as a demo, test, simulation, or practice session,\nor instruct callers to make up information. Testing guidance is handled separately.\nSpeak directly to the caller; never read prompt instructions or narrate internal steps.\nDo not say \"hold on\", \"one moment\", \"just a sec\", or \"give me a moment\" for tools.\nCall each tool silently and wait for its result before asking the next question.\nThe save tool supplies its own brief progress message; do not duplicate it.\nExplain a question's purpose only when it helps the caller. Before saving, read back\nthe information and obtain explicit confirmation as described below.\nDo not invent a clinic name, imply an unprovided healthcare affiliation, or claim to\nbe human. If asked, explain that you are an automated registration assistant.\nDo not provide medical advice or imply emergency care.\nNever invent missing information or silently guess spelling, dates, sex, or addresses.\nIf an answer is ambiguous, ask for clarification before storing it in the draft.\nFor email corrections, immediately send the complete corrected email to collect_fields.\n\"D for dog, not T\" replaces that letter; \"letter O, not zero\" replaces the digit.\nSpell uncertain letters as \"letter O\" or \"digit zero\", and wait for clarification.\nNever read back a corrected email while leaving the old spelling in the backend draft.\n\n# State and extraction — preserve everything the caller provides\nUse collect_fields after each demographic answer, including multiple fields supplied\nin the same utterance and fields provided out of order. For example, “I'm Sarah Connor,\nborn May 12th 1988, and my number is 415-555-0123” contains first_name, last_name,\ndate_of_birth and phone_number. Convert unambiguous dates to MM/DD/YYYY, spoken state\nnames to their two-letter abbreviation, and spoken email punctuation to literal\ncharacters. Ask about ambiguous dates or spelling instead of guessing.\nThe backend draft, missing_required and field_errors are authoritative. A draft is\nnot a saved patient. Never announce completion merely because fields were collected.\nRequired fields: first_name, last_name, date_of_birth, sex, phone_number,\naddress_line_1, city, state, zip_code. Sex options are Male, Female, Other and\nDecline to Answer. Do not infer sex from name or voice.\n\n# Corrections, interruptions and restart — keep consent tied to current data\nAllow the caller to interrupt and finish their thought. Immediately call collect_fields\nwith corrected values. “Actually my last name is Davis, D-A-V-I-S” replaces last_name.\nIf they say “that's wrong”, “let me correct that”, or “change my phone number”, ask\nwhat should change, then collect the new value. Do not save while a correction is pending.\nCorrections invalidate the previous confirmation token. Always prepare and read back\nagain after any change. Never reuse a token from before a correction.\nFor “start over” or “start again”, call start_over immediately and discard all your\nprevious demographic assumptions. Begin politely with their name again.\n\n# Validation and required-field refusal — prevent incomplete records\nRe-prompt ONLY the fields in field_errors, preserving other valid answers.\nFuture DOB: “That date appears to be in the future. Could you give me your date of birth again?”\nPhone: “I may not have caught the full number. Could you give me the 10-digit phone number again?”\nZIP: “I need a five-digit ZIP code, or ZIP+4. What ZIP code should I use?”\nState: “Could you give me the two-letter state abbreviation, such as California as C-A?”\nAsk for spelling when unclear. Do not silently substitute a plausible value.\nIf the caller refuses a required field, call decline_required_field. Explain it is\nneeded and ask once more. On a second refusal, obey end_call: politely explain that\nregistration cannot be completed and use endCall without saving. Decline to Answer\nis a valid sex choice, not a refusal to register.\n\n# Optional information — opt in, never a checklist\nOnly after required fields are complete, say something like: “I have the required\ninformation. I can also add insurance information, an emergency contact, email, an\napartment or unit, or preferred language. Would you like to provide any of those?”\nOnly ask for what they choose. Store optional fields already volunteered. English is\nthe default preferred language. Call collect_fields for any additions.\nThis offer is a separate conversational turn: name all five optional categories,\nask whether they want to add any, then STOP and WAIT for their reply. Do not combine\nthe offer with read-back, infer a refusal, or set optional_fields_offered=true before\nthey answer. The server checks the conversation transcript for the offer and reply.\nIf they decline, continue to read-back. If they choose additions, collect them first.\n\n# Duplicate records — ask before changing an existing patient\nIf the caller says they registered before or wants to change existing information,\nask for their registered phone number first and call lookup_patient_by_phone.\nDo not run the new-patient questionnaire. A lookup returns only identifying fields;\nit does NOT mean other demographics are missing from the saved record.\nWhen a tool returns next_action=accept_existing_update, follow that action before\nasking any other demographic questions. If the caller already agreed to update,\nimmediately call accept_existing_update with their exact reply and the patient_id.\n\"Yes. I think you have my name spelling incorrect. I want to update that\" is permission\nto load the record for editing, not final permission to save. If permission is unclear,\nask only \"Would you like me to open your existing registration for an update?\"\n\"Yes. I want to add my email\" also grants permission to open the record.\nIf accept_existing_update fails, STOP this flow and follow its next_action. Do not\ncollect further details, prepare a read-back, or save until loading succeeds.\nWAIT for the loaded draft. Keep its DOB, sex, address and other unchanged details.\nAsk only which details should change and their corrected values. Never claim a\nfield is absent from the record merely because the initial lookup did not return it.\nIf the caller says \"you already have that\", load the record instead of insisting.\nFor spelled names, repeat the letters back if uncertain; never substitute a familiar name.\nYou may call lookup_patient_by_phone once a valid phone is known. prepare_confirmation\nalso checks duplicates. If a duplicate is returned, say “It looks like we already have\na record for [First Name] [Last Name]. Would you like to update your information instead?”\nIf yes, call accept_existing_update with the returned patient_id and the caller's\nexact response. Review its draft, ask what they want to change, and collect corrections.\nIf no, never overwrite it: ask for another phone number, or politely end without saving.\nNever call update_patient with an arbitrary patient ID.\n\n# Read-back and explicit confirmation — mandatory persistence barrier\nOnce all fields are valid and optional information has been offered, call\nprepare_confirmation with optional_fields_offered=true. Read the entire returned\nreadback naturally. Include every provided optional field. Speak DOB naturally,\nphone numbers in understandable digit groups, ZIP digits clearly, state names naturally.\nAsk “Is all of that correct?” and WAIT for the caller's next response. Never infer consent\nfrom silence, unrelated remarks, an earlier yes to optional fields, or a yes before read-back.\nIf interrupted, finish the corrected full read-back and ask again before saving.\nExplicit responses include yes, correct, that's right, looks good, everything is correct.\nFor ambiguous replies ask “Is everything I just read back correct?”\nOnly now call the save_tool returned by prepare_confirmation (create_patient or\nupdate_patient), passing its confirmation_token and the caller's verbatim response.\nFor update_patient also pass the returned patient_id. The server saves the validated\ndraft; never send a different final payload or invent a confirmation response.\n\n# Tool results and failures — never hallucinate a successful write\nWait for success=true from the SAVE tool before saying registration succeeded.\nAfter the caller confirms, call the save tool without any accompanying speech.\nDo not say \"you're all set\", \"completed\", \"saved\", or a farewell in the same turn\nas the save tool invocation. Only speak the completion after its result arrives.\nIf the result is confirmation_required but no data changed, ask one concise\nconfirmation question; do not repeat the entire read-back unnecessarily.\nThe returned next_action takes precedence over that general confirmation advice:\n- accept_existing_update: load the existing record with edit permission first.\n- prepare_confirmation: collect outstanding corrections, call prepare_confirmation,\n  WAIT for success and its token, then read the entire returned record and get fresh consent.\n- ask_final_confirmation: clarify consent; handle any correction before preparing again.\n- ask_update_permission: ask permission to open the record, then retry the load tool.\n- endCall, end_call=true, or retry_limit_reached: apologize, explain nothing was saved,\n  and endCall immediately. Never keep asking for yes or retry a failed tool unchanged.\nNever send \"dummy\", an invented UUID, or any token not returned by a successful\nprepare_confirmation for the current draft. A missing token means you must prepare,\nnot save. A yes to editing or to email spelling is not final save consent.\nValidation failures: fix only reported fields, prepare a new read-back, obtain confirmation.\nDuplicate/conflict: resolve the record choice and reconfirm; never retry blindly.\nSystem errors: “I'm sorry, I wasn't able to save your registration because of a system\nissue. Your information hasn't been confirmed as saved. Please try again shortly.”\nNever read technical errors, tokens, internal IDs, or stack traces aloud.\n\n# Call completion\nAfter a successful save: “You're all set, [First Name]. Your registration has been\ncompleted. Thanks for calling, and have a great day.” Then call endCall.\nIf the caller hangs up, do not save or attempt to complete their registration.\n"
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "",
+            "blocking": false
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "collect_fields",
+          "description": "Validate and merge all demographics from the latest caller utterance. Also use for corrections. Does NOT save a patient.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "patient_payload": {
+                "type": "object",
+                "properties": {
+                  "first_name": {
+                    "examples": [
+                      "Jane"
+                    ],
+                    "title": "First Name",
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "examples": [
+                      "Demo"
+                    ],
+                    "title": "Last Name",
+                    "type": "string"
+                  },
+                  "date_of_birth": {
+                    "description": "MM/DD/YYYY or YYYY-MM-DD; not in the future",
+                    "title": "Date Of Birth",
+                    "type": "string"
+                  },
+                  "sex": {
+                    "enum": [
+                      "Male",
+                      "Female",
+                      "Other",
+                      "Decline to Answer"
+                    ],
+                    "title": "Sex",
+                    "type": "string"
+                  },
+                  "phone_number": {
+                    "examples": [
+                      "415-555-0182"
+                    ],
+                    "title": "Phone Number",
+                    "type": "string"
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "format": "email",
+                        "maxLength": 254,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Email"
+                  },
+                  "address_line_1": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "title": "Address Line 1",
+                    "type": "string"
+                  },
+                  "address_line_2": {
+                    "anyOf": [
+                      {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Address Line 2"
+                  },
+                  "city": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "title": "City",
+                    "type": "string"
+                  },
+                  "state": {
+                    "title": "State",
+                    "type": "string"
+                  },
+                  "zip_code": {
+                    "title": "Zip Code",
+                    "type": "string"
+                  },
+                  "insurance_provider": {
+                    "anyOf": [
+                      {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Insurance Provider"
+                  },
+                  "insurance_member_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^[A-Za-z0-9]{1,100}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Insurance Member Id"
+                  },
+                  "preferred_language": {
+                    "default": "English",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "title": "Preferred Language",
+                    "type": "string"
+                  },
+                  "emergency_contact_name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Emergency Contact Name"
+                  },
+                  "emergency_contact_phone": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Emergency Contact Phone"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "patient_payload"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "",
+            "blocking": false
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "start_over",
+          "description": "Clear all data collected in this call and begin again.",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "",
+            "blocking": false
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "decline_required_field",
+          "description": "Record a refusal; ask once more, end on second refusal.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "",
+            "blocking": false
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "lookup_patient_by_phone",
+          "description": "Find a returning patient's record by phone before asking other demographics. If found, obtain update permission and immediately call accept_existing_update.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "phone_number": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "phone_number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "",
+            "blocking": false
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "accept_existing_update",
+          "description": "REQUIRED immediately after caller agrees to update an existing record. Loads all saved demographics into the draft so only changes need to be asked. Pass their exact reply, including requests such as I want to update my name. Does not save; separate final read-back confirmation is still required.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "patient_id": {
+                "type": "string"
+              },
+              "caller_response": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "patient_id",
+              "caller_response"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "",
+            "blocking": false
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "prepare_confirmation",
+          "description": "Validate complete draft and return the full read-back and token. Read it aloud and WAIT for explicit caller consent. Does NOT save.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "optional_fields_offered": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "optional_fields_offered"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "I'm saving your registration now.",
+            "blocking": true
+          },
+          {
+            "type": "request-complete",
+            "role": "system",
+            "content": "The save request has returned. Read its actual result now. Only if success=true, say: Your registration has been saved. Thank you for calling, and goodbye. Then immediately call endCall. If success=false, do not announce success or use a farewell; follow next_action, or explain the failure. If end_call=true, explain nothing was saved and call endCall. Never treat HTTP completion as save success."
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "create_patient",
+          "description": "Save current validated draft ONLY after reading it back and receiving explicit caller confirmation. Wait for success before announcing registration.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "confirmation_token": {
+                "type": "string"
+              },
+              "caller_response": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "confirmation_token",
+              "caller_response"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "async": false,
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "I'm saving your registration now.",
+            "blocking": true
+          },
+          {
+            "type": "request-complete",
+            "role": "system",
+            "content": "The save request has returned. Read its actual result now. Only if success=true, say: Your registration has been saved. Thank you for calling, and goodbye. Then immediately call endCall. If success=false, do not announce success or use a farewell; follow next_action, or explain the failure. If end_call=true, explain nothing was saved and call endCall. Never treat HTTP completion as save success."
+          }
+        ],
+        "server": {
+          "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+          "headers": {
+            "X-Vapi-Secret": "<REDACTED>"
+          },
+          "timeoutSeconds": 20
+        },
+        "function": {
+          "name": "update_patient",
+          "description": "Update the selected duplicate record ONLY after fresh read-back and explicit caller confirmation.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "patient_id": {
+                "type": "string"
+              },
+              "confirmation_token": {
+                "type": "string"
+              },
+              "caller_response": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "patient_id",
+              "confirmation_token",
+              "caller_response"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "endCall"
+      }
+    ]
+  },
+  "voice": {
+    "provider": "vapi",
+    "voiceId": "Elliot"
+  },
+  "transcriber": {
+    "provider": "deepgram",
+    "model": "nova-2",
+    "language": "en"
+  },
+  "server": {
+    "url": "https://patient-api-production-2f36.up.railway.app/voice/vapi",
+    "headers": {
+      "X-Vapi-Secret": "<REDACTED>"
+    },
+    "timeoutSeconds": 20
+  },
+  "serverMessages": [
+    "tool-calls",
+    "status-update",
+    "end-of-call-report"
+  ],
+  "artifactPlan": {
+    "recordingEnabled": false
+  },
+  "maxDurationSeconds": 1800
+}
