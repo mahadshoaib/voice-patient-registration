@@ -24,11 +24,11 @@ The failed email-edit loop was fixed and did not recur in the latest update.
 | Real U.S. number | +1 (859) 689-8029 active and correctly attached; inbound telephone acceptance still pending |
 | Deployment/auth/logging | Health/docs 200, unauthenticated patients 401, authenticated list 200; four active patients; final payload logging enabled |
 | Tests | 82 passed and clean lint; all field-group updates and nullable-field removal tested |
-| Code/docs | Source, prompt, setup, architecture and limitations present; repository publication still pending |
+| Code/docs | Source, prompt, setup, architecture and limitations present; public source repository linked in README and SUBMISSION |
 
 Latest verified deployment: `d076f9eb-471c-4a0e-90e0-293500c4360c` (SUCCESS).
 Live greeting and system prompt matched source at audit. The public repository target
-is `mahadshoaib/voice-patient-registration`; do not represent it as published until verified.
+is https://github.com/mahadshoaib/voice-patient-registration.
 
 ## Remaining core and submission work
 
@@ -42,8 +42,8 @@ is `mahadshoaib/voice-patient-registration`; do not represent it as published un
 3. Finish voice edge-case acceptance: invalid DOB/phone, interruption/correction,
    start-over, pre-consent hangup, optional removal, phone change and failed-write speech.
    Automated checks do not establish acoustic performance.
-4. Publish source publicly to the agreed GitHub account, fill submission links, and
-   exclude secrets, databases, local diagnostics and the confidential challenge PDF.
+4. Public repository and submission links are prepared. Secrets, databases, local
+   diagnostics and the confidential challenge PDF are excluded from Git.
 5. Reviewer API key rotation is done, with old-key rejection/new-key access verified.
    Privately share access and send the
    repository URL, phone, API URL and honest testing notes. No submission has been sent.
@@ -60,9 +60,9 @@ telephone acceptance and spoken completion remain the principal review risks.
 The assessors prioritize dependable end-to-end behavior and clear trade-offs over
 extra features. HIPAA/production uptime are not required; use fictional data only.
 
-Publication status: GitHub CLI installed locally, but not authenticated. Permission
-prompts rejected git initialization and GitHub login. No repository was created or
-published; do not interpret the proposed URL as a live repository.
+Publication status: GitHub authorized as mahadshoaib; public repository created.
+The reviewer API credential is separate from provider credentials; its private
+delivery remains pending. No assessment submission or credentials have been sent.
 
 Clarification: preferred_language defaults to English but is not nullable. Other
 nullable optional fields may be removed; storing Spanish does not enable Spanish speech.

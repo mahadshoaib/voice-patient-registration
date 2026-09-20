@@ -52,7 +52,7 @@ The last command updates the already-configured assistant and phone association.
 `.railwayignore` excludes environment files, caches, logs and local databases.
 `scripts.check_accounts` can inspect account resources without printing credentials.
 
-The repository is not yet published; its submission URL remains to be supplied.
+Public source repository: https://github.com/mahadshoaib/voice-patient-registration.
 
 Latest verified API deployment ID: `d076f9eb-471c-4a0e-90e0-293500c4360c`.
 The latest local regression run passed all 82 tests; lint passed as well.

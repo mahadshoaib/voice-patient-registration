@@ -13,7 +13,7 @@ update their existing record. **Use fictional information only.**
 | API | https://patient-api-production-2f36.up.railway.app |
 | Interactive API docs | https://patient-api-production-2f36.up.railway.app/docs |
 | Credentials | Reviewer API key supplied privately; enter it in Swagger's **Authorize** dialog |
-| Repository | [mahadshoaib/voice-patient-registration](https://github.com/mahadshoaib/voice-patient-registration) (publication verification pending) |
+| Repository | [mahadshoaib/voice-patient-registration](https://github.com/mahadshoaib/voice-patient-registration) |
 
 Call the number from a supported U.S. calling route, provide fictional details,
 and confirm the read-back. Query `GET /patients` using your fictional phone number
