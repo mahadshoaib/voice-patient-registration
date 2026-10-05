@@ -12,6 +12,7 @@ from app.core.logging import event
 from app.models.registration import Registration
 from app.schemas.patient import REQUIRED_FIELDS, PatientCreate, PatientRead, validate_fields
 from app.services.patient_service import PatientService
+from app.voice.appointments import BOOKING_TOOLS, execute_booking
 
 CONFIRMATIONS = {
     "yes",
@@ -167,18 +168,22 @@ def execute(db: Session, call_id: str, name: str, args: dict) -> dict:
             "next_action": "endCall",
             "message": "This call is closed. Do not retry; endCall now.",
         }
+    if name in BOOKING_TOOLS:
+        return execute_booking(db, reg, name, args)
     if reg.status == "saved":
         if name in {"create_patient", "update_patient"}:
             return {"success": True, "patient_id": str(reg.patient_id), "already_saved": True}
         raise AppError(409, "already_saved", "Registration is already saved; end the call")
 
     if name == "start_over":
+        reg.booking_patient_id = reg.appointment_slot = reg.appointment_token = None
         reg.draft, reg.field_errors, reg.refusals = {}, {}, {}
         reg.confirmation_token, reg.update_patient_id = None, None
         reg.status = "collecting"
         return snapshot(reg)
 
     if name == "collect_fields":
+        reg.appointment_slot = reg.appointment_token = None
         payload = args.get("patient_payload")
         if not isinstance(payload, dict):
             raise AppError(422, "validation_error", "patient_payload must be an object")
@@ -368,6 +373,9 @@ def execute(db: Session, call_id: str, name: str, args: dict) -> dict:
             else service.create(payload)
         )
         reg.status, reg.patient_id, reg.confirmation_token = "saved", patient.patient_id, None
+        # Registration may change the selected name/identity after booking preparation.
+        # Obtain fresh appointment consent for the saved patient, never reuse that token.
+        reg.appointment_slot = reg.appointment_token = reg.booking_patient_id = None
         reg.draft, reg.field_errors, reg.refusals = {}, {}, {}
         # The webhook commits patient and session atomically before delivering this result.
         return {

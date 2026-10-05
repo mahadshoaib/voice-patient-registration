@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Patient desk · Registration</title>
+    <link rel="stylesheet" href="/static/dashboard.css" />
+    <script src="/static/dashboard.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/dashboard"
+        ><span class="mark">+</span> Patient desk</a
+      ><span class="badge">Assessment demo</span>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">REGISTRATION & SCHEDULING</p>
+          <h1>A clear view of patient care.</h1>
+          <p>
+            Find a patient, review their details, and arrange a first visit.
+          </p>
+        </div>
+        <a href="/docs" class="text-link">API documentation ↗</a>
+      </section>
+      <p class="notice">
+        Use fictional information only. Appointments are demonstration bookings,
+        not visits with a real clinic.
+      </p>
+      <section id="login-panel" class="card login">
+        <div>
+          <h2>Open the patient desk</h2>
+          <p>
+            Enter your reviewer API key to view records. It stays in memory for
+            this page session.
+          </p>
+        </div>
+        <form id="login-form">
+          <label for="api-key">Reviewer API key</label>
+          <div class="inline">
+            <input
+              id="api-key"
+              type="password"
+              required
+              autocomplete="off"
+              placeholder="Your private access key"
+            /><button id="connect" type="submit">Connect</button>
+          </div>
+        </form>
+      </section>
+      <p id="message" role="status" aria-live="polite"></p>
+      <div id="workspace" hidden>
+        <section class="toolbar">
+          <div class="counts">
+            <strong id="patient-count">0</strong> patients <span>·</span>
+            <strong id="appointment-count">0</strong> upcoming visits
+          </div>
+          <div class="actions">
+            <span id="updated"></span
+            ><button id="refresh" class="secondary">Refresh</button
+            ><button id="logout" class="secondary">Lock desk</button>
+          </div>
+        </section>
+        <div class="layout">
+          <section class="card directory">
+            <div class="section-title">
+              <h2>Patients</h2>
+              <span class="badge">Live records</span>
+            </div>
+            <label for="search">Search name, phone or email</label
+            ><input
+              id="search"
+              type="search"
+              placeholder="e.g. Emily or 4155550147"
+            />
+            <div id="patient-list" class="patient-list"></div>
+          </section>
+          <section class="card details">
+            <div id="empty-selection" class="empty">
+              <span class="empty-icon">↖</span>
+              <h2>Select a patient</h2>
+              <p>Their demographics and appointments will appear here.</p>
+            </div>
+            <div id="patient-details" hidden>
+              <p class="eyebrow">PATIENT RECORD</p>
+              <h2 id="patient-name"></h2>
+              <p id="patient-id" class="muted"></p>
+              <dl id="demographics"></dl>
+              <section class="booking">
+                <div class="section-title">
+                  <h3>Book a first visit</h3>
+                  <span class="badge">30 minutes</span>
+                </div>
+                <p id="schedule-description" class="muted">Loading schedule…</p>
+                <form id="booking-form">
+                  <label for="slot">Available time · UTC</label
+                  ><select id="slot" required>
+                    <option value="">Choose a time</option></select
+                  ><button id="book" type="submit">
+                    Review & book appointment
+                  </button>
+                </form>
+                <p id="slot-empty" hidden>
+                  No slots available. Refresh to check again.
+                </p>
+              </section>
+              <h3 class="visits-title">Appointments</h3>
+              <div id="appointments"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer>
+      Patient desk <span>·</span> Registration records and appointments share
+      one database.
+    </footer>
+  </body>
+</html>

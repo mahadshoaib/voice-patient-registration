@@ -2,7 +2,7 @@
 
 [Back to README](README.md)
 
-`/docs` and `/openapi.json` describe the schemas. Patient endpoints require
+`/docs` and `/openapi.json` describe the schemas. Patient and appointment endpoints require
 `X-API-Key` when configured. Successes return `{"data": ..., "error": null}`;
 errors return `{"data": null, "error": {"code": "...", "message": "...", "details": ...}}`.
 
@@ -14,6 +14,17 @@ errors return `{"data": null, "error": {"code": "...", "message": "...", "detail
 | POST | `/patients` | Validated create, 201 |
 | PUT | `/patients/{UUID}` | Partial update, 200; omitted fields stay unchanged |
 | DELETE | `/patients/{UUID}` | Set `deleted_at`, 200; never delete the row |
+| GET | `/dashboard` | Public UI shell; all patient/appointment data requires the API key |
+| GET | `/appointments/slots` | Available ISO timestamps, timezone UTC, duration and schedule description |
+| GET | `/appointments` | Appointment history, optionally filtered by `patient_id` |
+| POST | `/appointments` | Book `{ "patient_id": "UUID", "starts_at": "ISO timestamp with timezone" }`, 201 |
+| DELETE | `/appointments/{UUID}` | Cancel idempotently, retain history and release the slot, 200 |
+
+Choose `starts_at` from `/appointments/slots`: weekdays 14:00–20:00 UTC, 30-minute
+visits, next 14 days. Past, off-grid, timezone-less or out-of-window timestamps
+return 422. Taken slots return 409; repeating the same patient/slot returns the
+existing active appointment. A database partial unique index protects concurrent
+booking attempts. All visits are mock. Deleting a patient cancels upcoming visits.
 
 Invalid input/UUIDs return 422; conflicts/duplicate active phones 409; unauthenticated
 requests 401; write failures 500. Null clears optional fields; null cannot clear a

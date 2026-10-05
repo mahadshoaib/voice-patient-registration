@@ -1,4 +1,10 @@
-# Assessment requirements audit - updated September 21, 2026
+# Assessment requirements audit
+
+**October 2026 update:** The patient dashboard and mock appointment booking have
+now been implemented. See [REQUIREMENTS.md](REQUIREMENTS.md) for current bonus
+coverage, [TESTING.md](TESTING.md) for verification and [DEPLOYMENT.md](DEPLOYMENT.md)
+for the latest deployment. The September audit below is historical, including its
+test counts, tool counts, deployment IDs and deferred-bonus entries.
 
 This current assessment supersedes the historical audit below.
 

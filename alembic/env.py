@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, pool
 from alembic import context
 from app.core.config import settings
 from app.db.base import Base
+from app.models.appointment import Appointment  # noqa: F401
 from app.models.patient import Patient  # noqa: F401
 from app.models.registration import Registration  # noqa: F401
 

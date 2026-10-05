@@ -23,11 +23,11 @@ An additional deleted_at implements soft deletion.
 | Bonus | Status |
 | --- | --- |
 | Duplicate detection | Completed: phone lookup, permission-based record loading, edits and fresh confirmation; demonstrated in browser calls |
-| Automated tests | Completed: 82 passing tests covering API, validation, voice tools, failure handling and every demographic update group |
-| Appointment scheduling | Not implemented; optional |
+| Automated tests | Completed: regression tests cover API, validation, voice tools, failure handling, demographic updates and booking safeguards; see TESTING.md |
+| Appointment scheduling | Implemented: shared mock calendar, API/dashboard booking and cancellation, confirmation-gated voice booking; real spoken booking acceptance pending |
 | Multilingual conversation | Not implemented; preferred_language stores a preference but does not change English speech |
 | Patient-linked transcript/summary storage | Not implemented in our database; Vapi call artifacts are not claimed as this bonus |
-| Patient dashboard | Not implemented; Swagger is API documentation, not a patient dashboard |
+| Patient dashboard | Implemented: authenticated patient search/details, appointment list, booking and cancellation at /dashboard |
 
 ## Non-functional requirements and evaluation
 

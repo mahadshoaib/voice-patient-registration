@@ -16,6 +16,34 @@ def assistant_configuration(settings: Settings) -> dict:
     string = {"type": "string"}
     definitions = [
         (
+            "select_appointment_patient",
+            "For a returning caller who only wants booking: match registered phone and DOB. "
+            "Does not change demographics. New patients must finish registration first.",
+            {"phone_number": string, "date_of_birth": string},
+            ["phone_number", "date_of_birth"],
+        ),
+        (
+            "list_appointment_slots",
+            "Fetch real availability from the MOCK clinic database. Optional date YYYY-MM-DD. "
+            "Returns up to six times plus available dates. Never invent availability.",
+            {"date": string},
+            [],
+        ),
+        (
+            "prepare_appointment",
+            "Select an available starts_at ISO timestamp returned by list_appointment_slots. "
+            "Returns readback and token, does NOT book. Read back, then WAIT for consent.",
+            {"starts_at": string},
+            ["starts_at"],
+        ),
+        (
+            "book_appointment",
+            "Book ONLY after the prepared appointment was read back and the caller confirmed. "
+            "Pass exact reply and token. Wait for success before announcing booking.",
+            {"confirmation_token": string, "caller_response": string},
+            ["confirmation_token", "caller_response"],
+        ),
+        (
             "collect_fields",
             "Validate and merge all demographics from the latest caller utterance. "
             "Also use for corrections. Does NOT save a patient.",
@@ -109,10 +137,22 @@ def assistant_configuration(settings: Settings) -> dict:
                     "role": "system",
                     "content": "The save request has returned. Read its actual result now. "
                     "Only if success=true, say: Your registration has been saved. "
-                    "Thank you for calling, and goodbye. Then immediately call endCall. "
+                    "Then ask whether they would like a demonstration appointment. "
+                    "If yes, use list_appointment_slots; if no, thank them and endCall. "
                     "If success=false, do not announce success or use a farewell; follow "
                     "next_action, or explain the failure. If end_call=true, explain nothing "
                     "was saved and call endCall. Never treat HTTP completion as save success.",
+                }
+            )
+        if tool["function"]["name"] == "book_appointment":
+            tool["messages"].append(
+                {
+                    "type": "request-complete",
+                    "role": "system",
+                    "content": "Read the actual booking result. Only after success=true, confirm "
+                    "the appointment date and UTC time, thank the caller, then endCall. "
+                    "If success=false, do not announce a booking. Refresh unavailable slots; "
+                    "follow next_action. Never equate HTTP completion with success.",
                 }
             )
     tools.append({"type": "endCall"})

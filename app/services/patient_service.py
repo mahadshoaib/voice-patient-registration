@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -57,9 +58,26 @@ class PatientService:
         return patient
 
     def delete(self, patient_id: UUID) -> Patient:
-        patient = self.get(patient_id)
+        from app.models.appointment import Appointment
+
+        patient = self.db.scalar(
+            select(Patient)
+            .where(Patient.patient_id == patient_id, Patient.deleted_at.is_(None))
+            .with_for_update()
+        )
+        if patient is None:
+            raise AppError(404, "not_found", "Patient not found")
         patient.deleted_at = utcnow()
         patient.updated_at = patient.deleted_at
+        self.db.execute(
+            update(Appointment)
+            .where(
+                Appointment.patient_id == patient_id,
+                Appointment.cancelled_at.is_(None),
+                Appointment.starts_at > patient.deleted_at,
+            )
+            .values(cancelled_at=patient.deleted_at)
+        )
         self.db.flush()
         return patient
 

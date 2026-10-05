@@ -1,13 +1,15 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from starlette.exceptions import HTTPException
 
-from app.api.routes import health, patients, voice
+from app.api.routes import appointments, dashboard, health, patients, voice
 from app.core.config import settings
 from app.core.exceptions import AppError, error_body
 from app.core.logging import event
@@ -21,6 +23,9 @@ app = FastAPI(
 app.include_router(health.router)
 app.include_router(patients.router)
 app.include_router(voice.router)
+app.include_router(appointments.router)
+app.include_router(dashboard.router)
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 
 @app.exception_handler(AppError)

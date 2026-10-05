@@ -96,6 +96,7 @@ def process(db: Session, message: Message) -> dict:
             saved = reg.patient_id is not None
             reg.status, reg.confirmation_token, reg.draft = "ended", None, {}
             reg.field_errors, reg.refusals = {}, {}
+            reg.appointment_slot = reg.appointment_token = reg.booking_patient_id = None
             db.commit()
             event("call_ended", call_id=call_id, saved=saved)
         elif message.type == "status-update" and message.status == "in-progress":

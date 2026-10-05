@@ -3,7 +3,8 @@
 A conversational patient intake agent built with Vapi, FastAPI and PostgreSQL.
 It collects validated demographics, reads them back for confirmation, and saves
 them through the same service layer used by the REST API. Returning patients can
-update their existing record. **Use fictional information only.**
+update their existing record. A patient dashboard and mock appointment calendar
+share the same database and booking service. **Use fictional information only.**
 
 ## Try the demo
 
@@ -12,6 +13,7 @@ update their existing record. **Use fictional information only.**
 | Phone | **+1 (859) 689-8029** |
 | API | https://patient-api-production-2f36.up.railway.app |
 | Interactive API docs | https://patient-api-production-2f36.up.railway.app/docs |
+| Patient dashboard | https://patient-api-production-2f36.up.railway.app/dashboard |
 | Credentials | Reviewer API key supplied privately; enter it in Swagger's **Authorize** dialog |
 | Repository | [mahadshoaib/voice-patient-registration](https://github.com/mahadshoaib/voice-patient-registration) |
 
@@ -22,7 +24,7 @@ For browser calls, Vapi workspace access is required; there is no public browser
 widget. See the [reviewer guide](REVIEWER_GUIDE.md) for both calling methods.
 
 **Verified:** browser voice registration and returning-patient updates, API retrieval,
-PostgreSQL persistence, **82 automated tests**, and clean lint.
+PostgreSQL persistence, automated regression tests, and clean lint.
 **Not yet verified:** a real inbound telephone conversation. The tester did not
 have a supported international calling route available. The latest post-save
 completion guidance also needs a fresh spoken check. See [testing evidence](TESTING.md).
@@ -38,7 +40,7 @@ uv sync --frozen
 uv run python -m scripts.start
 ```
 
-Open http://localhost:8000/docs. Startup applies migrations before serving.
+Open http://localhost:8000/dashboard or `/docs`. Startup applies migrations before serving.
 Local startup runs the backend; voice calls additionally require a configured Vapi
 assistant and a reachable HTTPS backend. [Full setup and environment variables](SETUP.md).
 
@@ -60,10 +62,11 @@ and a [redacted configuration preview](AGENT_CONFIGURATION.preview.json) are inc
 ## Scope and limitations
 
 - All 19 required model fields, five CRUD operations, three search filters and soft deletion.
-- Duplicate detection and automated tests are implemented bonuses.
+- Four implemented bonuses: duplicate detection, automated tests, patient dashboard and mock appointment booking.
 - Caller consent and speech interpretation rely on the model; phone matching is not identity verification.
 - One active record per phone; shared household numbers are not supported by this duplicate policy.
-- English conversation only. No scheduling, patient dashboard or patient-linked transcript storage.
+- Mock visits: weekdays 14:00–20:00 UTC, 30 minutes, next 14 days. No real clinic/calendar integration.
+- English conversation only. No patient-linked transcript storage.
 - This is an assessment demo, not a production healthcare or HIPAA-compliant system.
 
 ## Documentation

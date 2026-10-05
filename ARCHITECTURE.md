@@ -43,7 +43,7 @@ exist only in `app/voice` and the thin voice route.
    consent phrase, current token and matching operation/selected patient.
 6. Patient mutation and the saved session marker commit in one transaction. Only
    after commit is success returned to Vapi. A failed commit rolls both back.
-7. The assistant announces success and uses `endCall`. End events clear draft
+7. The assistant announces success and offers optional mock booking, then uses `endCall`. End events clear draft
    demographics and close the session. A late save after closure is rejected.
 
 Conversational interpretation is deliberately delegated to the model; data validity
@@ -89,8 +89,8 @@ Vapi sends HTTPS webhooks to the public backend. The Vapi setup script checks ba
 connectivity before creating/updating the specified assistant and phone association.
 
 No task queue, Redis, frontend build or separate LLM server is necessary. Drafts use
-JSON to keep multi-field voice updates simple. No transcript storage or dashboard
-is added: core correctness and a reviewable call-to-database path take priority.
+JSON to keep multi-field voice updates simple. The dashboard is plain HTML/CSS/JS
+served by FastAPI; no frontend build or external CDN dependency is needed.
 The Railway Docker build, PostgreSQL runtime and production HTTP/webhook flows have
 been verified. Real inbound audio remains an explicit acceptance step.
 
@@ -134,5 +134,32 @@ still requires testing. The redacted preview is for review, not a credential sou
   The backend blocks further writes; physical hangup still relies on Vapi.
 - Nullable optional fields support removal; preferred_language stays nonblank and
   defaults to English. A language preference does not switch the speech pipeline.
-- Appointments, multilingual conversation, dashboard and transcript linking are
-  optional bonuses intentionally deferred in favor of the core registration flow.
+- Multilingual conversation and patient-linked transcript storage remain deferred.
+
+## Dashboard and mock appointments
+
+The public `/dashboard` shell contains no patient data. Authenticated same-origin
+fetches load records, details and appointments; the key stays in page memory, not
+local storage or URLs. Patient values use `textContent` to avoid HTML injection.
+This is a shared reviewer/admin interface with client-side search and no pagination.
+
+`AppointmentService` is shared by REST and voice. One mock clinic offers weekday
+half-hour slots from 14:00 to 20:00 UTC for 14 calendar days including today.
+Availability is calculated from the clock and active reservations. An active-slot
+partial unique index prevents double booking even under concurrent requests. A
+cancelled row remains as history while its slot becomes reusable. Patient deletion
+locks the patient and cancels future visits in the same transaction; booking takes
+the same patient lock. No external calendar, holidays, providers or reminders exist.
+UTC is deliberate: no implied U.S. local timezone or DST conversion. Real scheduling
+would need clinic timezone, provider calendars, opening exceptions and stronger access controls.
+
+Voice booking has separate durable selection, slot and consent-token fields in the
+registration session. A newly saved patient is already selected. Booking-only
+returning callers match phone plus DOB, without loading an edit draft. This is a
+demo match, not strong identity verification. Prepare validates live availability
+and returns a fresh read-back/token; booking requires that token and explicit consent.
+Patient registration consent cannot authorize an appointment. Commit precedes success;
+retries return the existing booking. Three rejected booking confirmations block more
+booking tools. Closing the call clears pending booking state but retains saved records.
+The model still reports the caller's speech and is responsible for reading back the
+slot and waiting. Cancellation is REST/dashboard only; one appointment per voice call.

@@ -3,6 +3,7 @@
 - Phone: **+1 (859) 689-8029** (Vapi status: active)
 - API: https://patient-api-production-2f36.up.railway.app
 - Docs: https://patient-api-production-2f36.up.railway.app/docs
+- Dashboard: https://patient-api-production-2f36.up.railway.app/dashboard (reviewer API key)
 - Health: https://patient-api-production-2f36.up.railway.app/health
 - Railway project: https://railway.com/project/acea77ca-6b9e-4866-a0c1-0f8f3b25a4db
 - Vapi assistant ID: `c7d70043-a8cd-4f65-97e3-e18dfe2823ab`
@@ -26,7 +27,7 @@ Do not publish this key. The Vapi server configuration has the matching webhook 
 - Corrected, explicitly confirmed fake demographics were saved and retrieved via REST.
 - The confirmed patient survived a successful Railway application redeployment.
 - The verification patient was soft-deleted and its synthetic call closed afterward.
-- Vapi accepted the assistant, all nine tools, and the production server configuration.
+- Vapi accepted the registration assistant and production server configuration; booking tools are described below.
 - The active U.S. number points to that assistant.
 
 These are API/tool checks. They do not establish speech recognition quality or prove
@@ -54,10 +55,16 @@ The last command updates the already-configured assistant and phone association.
 
 Public source repository: https://github.com/mahadshoaib/voice-patient-registration.
 
-Latest verified API deployment ID: `d076f9eb-471c-4a0e-90e0-293500c4360c`.
-The latest local regression run passed all 82 tests; lint passed as well.
-Vapi v7 includes post-result completion guidance which distinguishes success from
-application failure. Spoken timing remains a manual acceptance check.
+Latest verified API deployment ID: `3719333d-19b3-48e3-aa71-4756d96d71cc` (October 2026).
+The latest local regression run passed all 98 tests; lint and formatting passed as well.
+The dashboard and mock calendar are deployed. Alembic revision `927b318cf20a`
+adds appointments and durable voice booking state. Live PostgreSQL checks verified
+booking-only returning-patient selection, consent rejection, successful booking,
+idempotency, slot conflicts, cancellation and reuse. Synthetic patients were
+soft-deleted and their upcoming bookings cancelled; existing patients were unchanged.
+Published Vapi version **v8** matches the source prompt and defines 12 function tools plus endCall, including
+four booking tools. Post-result guidance offers booking after registration and only
+announces booking after success. Spoken timing and booking acceptance remain manual checks.
 Reviewer API key rotated September 21: old-key rejection and new-key access verified.
 The replacement is in local .env; share privately. No provider keys were changed.
 Production checks verified rejection of skipped/unanswered optional offers and

@@ -21,7 +21,8 @@ owner. There is no unauthenticated public browser-call URL in this project.
 1. Dial **+1 (859) 689-8029**, preferably from a supported U.S. calling route.
 2. Say you want to register, answer the questions, and optionally correct a field.
 3. Choose whether to add optional information. Confirm the complete read-back.
-4. Expect a save acknowledgment and graceful call ending; verify the record below.
+4. Expect a save acknowledgment and an offer to book a demonstration appointment.
+   Decline to end the call, or choose an available time and confirm its read-back.
 5. Call again, say you are returning, give the original registered phone number,
    and request one change. Unchanged demographics should be retained.
 
@@ -47,6 +48,15 @@ See Vapi's [assistant quickstart](https://docs.vapi.ai/assistants/quickstart) an
 
 ## Verify the saved data
 
+The easiest route is the [patient dashboard](https://patient-api-production-2f36.up.railway.app/dashboard).
+Enter the reviewer API key, search for your fictional patient, and select their record.
+All stored demographic fields and appointments are displayed. Click **Refresh** after
+a voice call. **Lock desk** clears the key and records from the page; the key is kept
+only in memory, so reloads require login again. The same key authorizes booking/cancellation.
+The dashboard is a reviewer/admin view, not an individual patient portal.
+
+To verify via the API instead:
+
 1. Open https://patient-api-production-2f36.up.railway.app/docs.
 2. Select **Authorize**, enter the reviewer API key (without a Bearer prefix), and authorize.
 3. Expand **GET /patients**, select **Try it out**, and filter by the supplied phone number.
@@ -69,6 +79,25 @@ unused fictional number in the 555-0100 through 555-0199 range.
 After registration, call again and say: "I registered before. I want to add my email."
 For a phone change, identify the record by its old number first. Optional nullable
 fields can be removed; required fields and preferred_language cannot be null.
+
+## Try appointment booking
+
+- Dashboard: select the patient, choose an available UTC time, click **Review & book
+  appointment**, then confirm. The appointment appears below. **Cancel** releases the slot.
+- New-patient call: finish registration, accept the appointment offer, choose one of
+  the tool-provided times and confirm the separate appointment read-back.
+- Returning call: say "I'm already registered and would like an appointment only."
+  Supply the registered phone and DOB. The agent should skip demographic collection,
+  offer available slots and book only after your confirmation.
+- All visits are mock, 30 minutes, weekdays 14:00–20:00 UTC, within the next 14 days.
+  UTC is spoken explicitly; no real provider or external calendar is reserved.
+  Cancellation is dashboard/API only. Rescheduling means cancel then book another
+  slot; it is not an atomic operation. One booking per voice call.
+- Registering does not automatically create an appointment. Deleting a patient
+  cancels their upcoming visits and releases those slots.
+
+Backend/UI booking checks do not establish spoken behavior. A fresh microphone
+booking call and a real inbound telephone call remain manual acceptance checks.
 
 ## What was actually tested
 

@@ -22,6 +22,10 @@ def test_config_has_matching_tools_prompt_and_authenticated_servers():
         "prepare_confirmation",
         "create_patient",
         "update_patient",
+        "select_appointment_patient",
+        "list_appointment_slots",
+        "prepare_appointment",
+        "book_appointment",
     }
     for definition in functions.values():
         assert definition["server"]["headers"]["X-Vapi-Secret"] == "test-secret"

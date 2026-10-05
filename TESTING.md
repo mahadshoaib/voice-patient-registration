@@ -2,6 +2,30 @@
 
 **Use fictional data only.** Local automated tests do not place telephone calls.
 
+## Dashboard and appointment checks (October 2026)
+
+The regression suite now includes booking availability, time validation, active-slot
+uniqueness, idempotent retry, cancellation/reuse, soft-deleted patients, API auth,
+returning booking without demographic updates, stale/ambiguous appointment consent,
+UTC read-back, closed calls and retry limits. Latest final results are recorded below.
+
+A headless Chrome check against an isolated local database passed: incorrect-key
+rejection, login, patient details/search, appointment booking, cancellation/released
+availability, desk lock and no JavaScript errors. Desktop (1440px) and mobile (390px)
+screenshots were inspected; mobile had no horizontal overflow. It uses synthetic
+patients only and does not claim to be a microphone conversation.
+
+Fresh microphone tests for new and returning-patient appointment booking remain
+pending, along with inbound telephone and final spoken-completion acceptance.
+
+The deployed PostgreSQL service also passed synthetic authenticated webhook/API
+checks for booking-only returning-patient selection, ambiguous consent rejection,
+confirmed booking, idempotent retry, a second patient's conflicting request (409),
+cancellation and reuse. `/dashboard` and its assets were reachable and appointment
+data rejected missing credentials. The two synthetic patients were soft-deleted,
+their upcoming appointments cancelled and the call closed. Existing active patient
+records were compared before/after and were unchanged.
+
 ## Browser voice evidence
 
 Actual microphone calls in Vapi's dashboard completed new registration and
@@ -24,9 +48,9 @@ Windows; SQLite). `--cache-dir` keeps uv's cache within this workspace.
 
 | Exact command | Actual outcome |
 | --- | --- |
-| `uv --cache-dir .uv-cache run pytest -q` | 82 passed; two upstream dependency deprecation warnings |
+| `uv --cache-dir .uv-cache run pytest -q` | 98 passed; two upstream dependency deprecation warnings |
 | `uv --cache-dir .uv-cache run ruff check app scripts tests alembic` | All checks passed |
-| `uv --cache-dir .uv-cache run ruff format --check app scripts tests alembic` | 43 files already formatted |
+| `uv --cache-dir .uv-cache run ruff format --check app scripts tests alembic` | All source files formatted |
 | `uv --cache-dir .uv-cache run python -m scripts.verify_restart` | All 16 checks passed, including empty migration, no schema drift, process restart and physical row retention |
 | `uv --cache-dir .uv-cache run python -m scripts.smoke_test --base-url http://127.0.0.1:8000` | All 9 live HTTP checks passed |
 
